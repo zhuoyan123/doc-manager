@@ -34,7 +34,7 @@
     
   + module_dist中只有一个入口，index.html。 
   
-  + qianniu_mini_app/webview 中张页面一个入口，index.html | detail-edit.html等，因为千牛webview中想实现多页面，url的path必须和真实的html名称一一对应。在配置文件中是使用CopyHtmlPlugin.js这个自定义webpack插件实现的。  
+  + qianniu_mini_app/webview 中每张页面一个入口，index.html | detail-edit.html等，因为千牛webview中想实现多页面，url的path必须和真实的html名称一一对应。在配置文件中是使用CopyHtmlPlugin.js这个自定义webpack插件实现的。  
   
   + package.json  脚本及依赖管理文件  
     + build:qianniu：千牛生产环境代码打包命令，执行该命令会把代码打包进入qianniu_mini_app/webview。 
@@ -44,7 +44,7 @@
 7. qianniu_mini_app/webview代码执行流程
 ```mermaid
 graph TB
-start(打开千牛美图王小程序)-->createWebview["创建小程序webview组建<br>判断url链接<br>默认url为“index.html”"]-->setWebviewUrl{设置webview url}
+start(打开千牛美图王小程序)-->createWebview["创建小程序webview组建<br>默认url为“index.html”"]-->setWebviewUrl{设置webview url}
 indexHtml(index.html)
 detailEditHtml(detail-edit.html)
 detailSelectHtml(detail-select.html)
@@ -100,7 +100,7 @@ routerInterceptor-->pageredirect[页面重定向]-->remoteRender
 8. 千牛小程序是先在千牛授权成功才能打开webview，所以web页面不需要关心授权问题，但是module.wusetech.com是在浏览器中使用的，作为模块来使用，一般都是在已经授权的页面比如Jquery美图王中打开，所以到达module.wusetech.com，需要url携带参数的形式来授权，`//module.wusetech.com/login?jwt_token=${jwt_token}&redirect=/tag-make-select&referer=${encodeURIComponent(location.origin)}/index`。打开login页面，以传入的token授权，然后重定向到指定页面。
 
 #### 二、 1688DetailProject  1688优选工作台详情页工程目录 
-1. .browserslistrc， 改文件必须存在，否则打包会报错。
+1. .browserslistrc， 该文件必须存在，否则打包会报错。
 2. src 这个是软链，source目录是devCode，前端业务逻辑的原始代码。
 3. custom.config.js，这个是优选工作台的配置文件：
 	+ 可以设置APP_NAME=1688_YOUXUAN_DETAIL、REMOTE_HOST等环境变量。
@@ -173,7 +173,7 @@ hasRedirect-->|否| goToIndexPage[进入首页]-->pageOption
 #### 五、小程序打开详情页和主题制作的编辑页面的逻辑如下（以详情页编辑为例子）：
 + 进入detail-edit-webview页面
 + 创建webview组建，url为 `https//m.wusetech.com/#/pages/auth/auth/?jwt_token=${token}&redirect=/pages/detail-edit/detail-edit?id=${id}`，token就是小程序授权的jwt_token，id是详情页模板id。
-+ 进入auth页面授权，然后重定向到detail-edit页面。
++ webview进入auth页面授权，然后重定向到detail-edit页面。
 
 #### 六、VUE_APP_MTW_HOST
 这个环境变量是用来只想后端host用的，在不同环境有不同作用：
@@ -258,7 +258,7 @@ openIndex["打开“index.html”"]-->loadIndex[加载index页面js]
 openPlan["打开“store-promotion-plan.html”"]-->loadPlan[加载plan页面js]
 setWebViewUrl-->|"url是“index.html”？"| openIndex
 setWebViewUrl-->|"url是“store-promotion-plan.html”？"| openPlan
-goCommonRouter[进入公共路由组建<br>方便千牛和web统一管理页面跳转]-->userOptions{用户操作}
+goCommonRouter[进入前端路由组建<br>方便千牛和web统一管理页面跳转]-->userOptions{用户操作}
 loadIndex-->goCommonRouter
 loadPlan-->goCommonRouter
 userOptions-->|"发送ajax请求？"| runAjax[发送ajax]
@@ -280,7 +280,7 @@ backIndex["返回“index.html”"]-->loadIndex[加载index页面js]
 backPlan["返回“store-promotion-plan.html”"]-->loadPlan[加载plan页面js]
 remoteResponse-->|"url是“index.html”？"| backIndex
 remoteResponse-->|"url是“store-promotion-plan.html”？"| backPlan
-goCommonRouter[进入公共路由组建<br>方便千牛和web统一管理页面跳转]-->userOptions[用户操作]
+goCommonRouter[进入前端路由组建<br>方便千牛和web统一管理页面跳转]-->userOptions[用户操作]
 loadIndex-->goCommonRouter
 loadPlan-->goCommonRouter
 nextOptions[下一步操作]
@@ -291,3 +291,166 @@ jumpPage-->|"是？"| routerInterceptor[触发路由拦截]
 routerInterceptor-->pageRedirect[页面重定向]
 pageRedirect-->remoteResponse
 ```
+
+# client_phone
+---
+这是旧版的美图王手机端仓库：
++ 包含微信小程序、H5、安卓App、阿里卖家小程序4个平台
++ 包含美图王、店小美2个应用。
+
+该仓库是用Hbuilder创建的，不是用vue-cli创建的，所有编辑运行都要使用Hbuilder IDE。区分4个平台可以使用uni-app内置的UNI_PLATFORM区分，2个应用是使用自定义的PLATFORM实现的，具体配置在package.json中新增uni-app字段：
+```json
+{
+  "uni-app": {
+    "scripts": {
+      "aligjz-mtw": {
+        "title": "美图王阿里国际站小程序",
+        "env": {
+          "UNI_PLATFORM": "mp-alipay",
+          "APP_NAME": "MTW"
+        },
+        "define": {
+          "MP-ALIPAY-1688-MTW": true,
+          "MP-ALIPAY": true
+        }
+      },
+      "mp-weixin-mtw": {
+        "title": "美图王微信小程序",
+        "env": {
+          "UNI_PLATFORM": "mp-weixin",
+          "APP_NAME": "MTW"
+        },
+        "define": {
+          "MP-WEIXIN-MTW": true,
+          "MP-WEIXIN": true
+        }
+      },
+      "mp-weixin-dxm": {
+        "title": "店小美微信小程序",
+        "env": {
+          "UNI_PLATFORM": "mp-weixin",
+          "APP_NAME": "DXM"
+        },
+        "define": {
+          "MP-WEIXIN-DXM": true,
+          "MP-WEIXIN": true
+        }
+      },
+      "h5-mtw": {
+        "title": "美图王H5",
+        "BROWSER": "Chrome",
+        "env": {
+          "UNI_PLATFORM": "h5",
+          "APP_NAME": "MTW"
+        },
+        "define": {
+          "H5-MTW": true,
+          "H5": true
+        }
+      },
+      "h5-dxm": {
+        "title": "店小美H5",
+        "BROWSER": "Chrome",
+        "env": {
+          "UNI_PLATFORM": "h5",
+          "APP_NAME": "DXM"
+        },
+        "define": {
+          "H5-DXM": true,
+          "H5": true
+        }
+      }
+    }
+  }}
+```
+
+比如要判断当前平台是h5端的店小美，可以使用以下判断：
+```javascript
+// #ifdef h5-dxm
+code...
+// #endif
+```
+
+#### 一、app-plus.env文件
+由于一套代码实现多个安卓app的生成，而不同app有不同的APP_NAME不同，所以当要开发美图王时，把APP_NAME设置为“MTW”，开发店小美时设置为“DXM”。
+
+#### 二、dxm_manifest.json、mtw_manifest.json、app_setting.js。
+由于app打包依赖manifest.json文件，而由于不同应用所依赖的配置不同，所以预先配置了两个配置文件dxm_manifest.json和mtw_manifest.json，当要切换应用时，先设置好app-plus.env中的环境变量，然后执行`node app_setting.js`即可自动把对应应用的配置导入到manifest.json中。
+
+#### 三、.env.dev、env.prd.js
+设置开发环境和生产环境中的变量
++ VUE_APP_REMOTE_HOST：微信小程序、H6、安卓app下，发送ajax时指定的host。阿里卖家小程序走的是小程序网关
++ VUE_APP_CDN_HOST：由于阿里卖家限制了外网资源的host，但是可以使用阿里oss上的资源，所以，采用了这个字段，配置不同环境下图片等资源的host。其他平台依然可以使用“staticcommprd.wusetech.com”或“mtw.wusetech.com”这种host。
++ VUE_APP_ALI_CLOUD_APP_ID：这是是阿里卖家小程序不同环境下的cloud_id的配置，用来初始化cloud的。
++ VUE_APP_USER_NAME：保留字段，暂时没用到。
+
+#### 四、prd-tar目录、.tar.sh、tar.js
+H5端发布上线的流程是：
++ 后端在client_phone仓库下找到prd-tar目录，找到对应应用的.tar压缩包。
++ 解压出对应压缩包的内容到指定位置。
+
+所以，为了简化过程，当Hbuilder打包生成了h5资源后，使用.tar.sh会自动的把h5目录打包成.tar.gz格式并存放到prd-tar目录。为什么会有个tar.js文件？由于window平台不支持.sh脚本，所以用node写了个跨平台的脚本，做的事和.tar.sh相同。执行的命令是
+```bash
+node tar.js [dxm | mtw]
+```
+
+#### 五、vue.config.js
+这是正常的vue环境的工程化配置文件，可以在里面做些修改，适配打包。
+
+#### 六、其他目录以及文件都是正常的前端代码文件，使用的是vue框架。
+router采用的也是uni-simple-router这个uni-app跨平台路由库。具体使用方式可以参照官方文档，这里使用的是1.0版本。
+
+#### 七、README.md
+该文件记录了安卓app的包名，证书名，以及注册证书的相关信息。证书文件存放在mtw开发机/etc/android目录下。
+
+# mtwlabel
+---
+这个是有赞主图水印的代码，环境是有赞官方提供的，根目录是后端运行环境，采用nodejs编写的，web框架用的是egg.js，这些都是有赞官方的默认配置。
+
+同时该仓库复用了代码，发布到微盟主图水印使用。
+
+#### 一、node web相关配置
++ app/controller 目录下新增了mtwbq.js文件，作用就是渲染生产环境的view。
++ app/router.js 中设置路由规则，匹配controller方法。
++ config/config.default.js 中增加了以下代码
+```javascript
+config.security = {
+    xframe: {
+		enable: false
+    },
+};
+```
+关闭**X-Frame-Options**验证，否则页面无法在有赞控制台展示。
+
+#### 二、mtwlabel-ui/react-app-use-page
+这个是前端的文件位置，看名字就知道这个工程使用的是react框架编写的。以下都是围绕这个目录说明。
+
+#### 三、youzanConfig.json、weimengConfig.json
+这两个文件看名字就能判断是有赞和微盟两个平台的配置文件，里面字段如下：
++ appName：定义appname。
++ configDir:  暂时未用到。
++ devOutputDir：开发环境代码打包的位置。
++ prodOutputDir：生产环境代码打包的位置。
+
+#### 四、cdn目录，.cdn.json
+cdn目录下存放着静态文件，目前存放的是webassembly，package.json中有一条命令，"youzanyun:upload"，会把cdn目录中的文件上传到有赞云并把返回的cdn地址写入.cdn.json文件，该命令实际上执行的是webpack/upload.js脚本。
+
+在生产环境下，代码生成的vendor、main等js、css包都会被上传到有赞云的cdn，并写入到生成的html中，这些都是webpack实现的。
+
+#### 五、package.json
+1. 环境变量设置：
++ DEVELOPER：指定开发者，比如我的开发环境后端host是zhangjm.wusetech.com，那我就设置DEVELOPER为zhangjm。
++ APP_PLATFORM：区分有赞和微盟使用的。
+
+2. scripts命令：
++ youzan:dev:xxx：开发环境运行命令。
++ youzan:build：生产环境运行命令。执行完该命令后会在当前目录生成 dist或weimeng-dist目录，里面存放的是生产环境代码，有赞平台下，直接git推送到有赞的git仓库，微盟下，推送到mtw的git仓库。
+
+# PsPlugin
+---
+ps一键抠图插件的仓库
+
+
+# CrmClient 
+---
+美图王crm仓库
